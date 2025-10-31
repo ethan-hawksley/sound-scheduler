@@ -29,7 +29,7 @@ async function createOffscreenDocument() {
   }
 }
 
-function scheduleNextChime() {
+function scheduleNextMinuteInterval() {
   // Clear any existing timeout
   if (timeoutId) {
     clearTimeout(timeoutId);
@@ -62,16 +62,39 @@ function scheduleNextChime() {
   if (msUntilTarget <= 0) {
     console.error(`Invalid scheduling: ${msUntilTarget}ms until target`);
     // Schedule for next interval
-    setTimeout(() => scheduleNextChime(), 1000);
+    setTimeout(() => scheduleNextMinuteInterval(), 1000);
     return;
   }
 
   console.log(`Next chime in ${Math.round(msUntilTarget / 1000)} seconds at ${target.toLocaleTimeString()}`);
 
   timeoutId = setTimeout(() => {
-    playSound();
-    scheduleNextChime(); // Schedule the next one
+    gatherConfigAndRunActivity();
+    scheduleNextMinuteInterval(); // Schedule the next one
   }, msUntilTarget);
+}
+
+function gatherConfigAndRunActivity() {
+  chrome.storage.sync.get(
+    {active: true, interval: 1},
+    ({active, interval}) => {
+      runActivity(active, interval);
+    }
+  );
+
+}
+
+function runActivity(active, interval) {
+  if (!active) {
+    console.log('Not active');
+    return;
+  }
+  const minutes = (new Date).getMinutes();
+  if (minutes % interval !== 0) {
+    console.log('Not on interval');
+    return;
+  }
+  playSound();
 }
 
 async function playSound() {
@@ -99,7 +122,7 @@ async function playSound() {
 // Initialize
 (async () => {
   await createOffscreenDocument();
-  scheduleNextChime();
+  scheduleNextMinuteInterval();
 })();
 
 // Keep alive mechanism (Chrome might suspend the service worker)
@@ -124,5 +147,5 @@ chrome.runtime.onInstalled.addListener(async () => {
   console.log('Extension installed/updated');
   offscreenDocumentCreated = false;
   await createOffscreenDocument();
-  scheduleNextChime();
+  scheduleNextMinuteInterval();
 });
