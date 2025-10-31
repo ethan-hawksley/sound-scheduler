@@ -1,0 +1,21 @@
+{
+  "name": "sound-scheduler",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build:chrome": "parcel build src/popup/popup.html src/content/content.ts src/background.ts --dist-dir dist/chrome && cp src/chrome/manifest.json dist/chrome/manifest.json",
+    "build:firefox": "parcel build src/popup/popup.html src/content/content.ts src/background.ts --dist-dir dist/firefox && cp src/firefox/manifest.json dist/firefox/manifest.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/webextension-polyfill": "^0.12.4",
+    "parcel": "^2.16.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "webextension-polyfill": "^0.12.0"
+  }
+}
