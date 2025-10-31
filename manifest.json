@@ -1,18 +1,28 @@
 {
   "manifest_version": 3,
-  "name": "Precise Minute Chime",
+  "name": "Sound Scheduler",
   "version": "1.0",
   "description": "Plays a sound exactly every minute on the clock",
-  "permissions": ["alarms", "offscreen", "storage"],
+  "permissions": [
+    "alarms",
+    "offscreen",
+    "storage"
+  ],
   "background": {
     "service_worker": "background.js"
   },
-  "web_accessible_resources": [{
-    "resources": ["sound.ogg"],
-    "matches": ["<all_urls>"]
-  }],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "sound.ogg"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "action": {
-    "default_popup":"quickoptions.html"
+    "default_popup": "quickoptions.html"
   },
   "options_page": "options.html"
 }

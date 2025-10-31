@@ -10,11 +10,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     audio.play()
       .then(() => {
         console.log('Sound played successfully');
-        sendResponse({ success: true });
+        sendResponse({success: true});
       })
       .catch((error) => {
         console.error('Error playing sound:', error);
-        sendResponse({ success: false, error: error.message });
+        sendResponse({success: false, error: error.message});
       });
 
     // Return true to indicate we'll send a response asynchronously

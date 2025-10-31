@@ -67,7 +67,7 @@ function scheduleNextChime() {
     return;
   }
 
-  console.log(`Next chime in ${Math.round(msUntilTarget/1000)} seconds at ${target.toLocaleTimeString()}`);
+  console.log(`Next chime in ${Math.round(msUntilTarget / 1000)} seconds at ${target.toLocaleTimeString()}`);
 
   timeoutId = setTimeout(() => {
     playSound();
@@ -101,7 +101,7 @@ async function playSound() {
 })();
 
 // Keep alive mechanism (Chrome might suspend the service worker)
-chrome.alarms.create('keepAlive', { periodInMinutes: 0.5 });
+chrome.alarms.create('keepAlive', {periodInMinutes: 0.5});
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'keepAlive') {
     // This just keeps the service worker alive
