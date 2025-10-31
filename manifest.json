@@ -3,12 +3,16 @@
   "name": "Precise Minute Chime",
   "version": "1.0",
   "description": "Plays a sound exactly every minute on the clock",
-  "permissions": ["alarms", "offscreen"],
+  "permissions": ["alarms", "offscreen", "storage"],
   "background": {
     "service_worker": "background.js"
   },
   "web_accessible_resources": [{
     "resources": ["sound.ogg"],
     "matches": ["<all_urls>"]
-  }]
+  }],
+  "action": {
+    "default_popup":"quickoptions.html"
+  },
+  "options_page": "options.html"
 }

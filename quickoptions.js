@@ -1,0 +1,1 @@
+console.log('loaded quick options');
