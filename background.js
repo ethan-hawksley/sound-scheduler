@@ -1,12 +1,17 @@
-// background.js - Fixed version with proper time calculation
-
 let timeoutId = null;
 let offscreenDocumentCreated = false;
 const activationInterval = 1; // 1 minute for testing, change to 5 for production
 
 async function createOffscreenDocument() {
-  // Check if we already created it
-  if (offscreenDocumentCreated) {
+  // Check if an offscreen document already exists
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: [chrome.runtime.getURL('offscreen.html')]
+  });
+
+  if (existingContexts.length > 0) {
+    offscreenDocumentCreated = true;
+    console.log('Offscreen document already exists');
     return;
   }
 
@@ -20,13 +25,7 @@ async function createOffscreenDocument() {
     offscreenDocumentCreated = true;
     console.log('Offscreen document created');
   } catch (error) {
-    // Document likely already exists, which is fine
-    if (error.message.includes('single offscreen document')) {
-      offscreenDocumentCreated = true;
-      console.log('Offscreen document already exists');
-    } else {
-      console.error('Error creating offscreen document:', error);
-    }
+    console.error('Error creating offscreen document:', error);
   }
 }
 
@@ -79,6 +78,9 @@ async function playSound() {
   const now = new Date();
 
   try {
+    // Ensure offscreen document exists
+    await createOffscreenDocument();
+
     // Send message to offscreen document to play sound
     await chrome.runtime.sendMessage({
       type: 'play-sound',
@@ -88,7 +90,7 @@ async function playSound() {
     console.log(`🔔 CHIME at exactly ${now.toLocaleTimeString()}.${String(now.getMilliseconds()).padStart(3, '0')}`);
   } catch (error) {
     console.error('Error playing sound:', error);
-    // Try to recreate offscreen document if needed
+    // Reset flag and try to recreate offscreen document
     offscreenDocumentCreated = false;
     await createOffscreenDocument();
   }
@@ -102,10 +104,18 @@ async function playSound() {
 
 // Keep alive mechanism (Chrome might suspend the service worker)
 chrome.alarms.create('keepAlive', {periodInMinutes: 0.5});
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'keepAlive') {
-    // This just keeps the service worker alive
+    // This keeps the service worker alive
     console.log('Keep alive ping');
+
+    // Also ping the offscreen document to keep it alive
+    try {
+      await chrome.runtime.sendMessage({type: 'ping'});
+    } catch (error) {
+      // Offscreen document might not exist yet, that's okay
+      console.log('Offscreen document not available for ping');
+    }
   }
 });
 

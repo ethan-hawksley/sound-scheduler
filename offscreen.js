@@ -1,4 +1,7 @@
-// offscreen.js - Handles audio playback for the extension
+// Keep the offscreen document alive with periodic heartbeat
+setInterval(() => {
+  console.log('Offscreen document heartbeat');
+}, 10000); // Every 10 seconds
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -18,6 +21,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
 
     // Return true to indicate we'll send a response asynchronously
+    return true;
+  }
+
+  // Handle ping messages to keep connection alive
+  if (message.type === 'ping') {
+    sendResponse({status: 'alive'});
     return true;
   }
 });
