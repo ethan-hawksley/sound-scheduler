@@ -25,7 +25,7 @@ async function createOffscreenDocument() {
     offscreenDocumentCreated = true;
     console.log('Offscreen document created');
   } catch (error) {
-    console.error('Error creating offscreen document:', error);
+    console.warn('Error creating offscreen document:', error);
   }
 }
 
