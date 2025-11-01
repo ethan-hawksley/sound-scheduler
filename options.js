@@ -36,12 +36,12 @@ function attachEventListeners() {
   });
   $('week').addEventListener('change', () => {
     chrome.storage.sync.set(
-      {currentWeek: Number($('week').value)}
-      , () => {
+      {currentWeek: Number($('week').value)},
+      () => {
         console.log('Current Week changed');
       }
-    )
-  })
+    );
+  });
 }
 
 const days = [
@@ -64,9 +64,9 @@ function renderTimes(times) {
   for (const time of times) {
     const row = createTimeRow(time);
     if (time.week === 1) {
-      frag1.append(row)
+      frag1.append(row);
     } else {
-      frag2.append(row)
+      frag2.append(row);
     }
   }
   week1Times.replaceChildren(frag1);
@@ -92,9 +92,9 @@ function createTimeRow(time) {
   timeCheckbox.checked = time.enabled;
   timeCheckbox.addEventListener('change', () => {
     toggleTime(time);
-  })
+  });
 
-  timeRow.append(timeButton, timeCheckbox)
+  timeRow.append(timeButton, timeCheckbox);
   return timeRow;
 }
 
@@ -136,10 +136,10 @@ function removeTime({week, day, hour, minute}) {
     {times: []},
     ({times}) => {
       const itemIndex = times.findIndex((item) => {
-        return item.week === week && item.day === day && item.hour === hour && item.minute === minute
+        return item.week === week && item.day === day && item.hour === hour && item.minute === minute;
       });
       if (itemIndex === -1) {
-        alert('Item could not be found')
+        alert('Item could not be found');
         return;
       }
       times.splice(itemIndex, 1);
@@ -160,13 +160,13 @@ function toggleTime({week, day, hour, minute}) {
     {times: []},
     ({times}) => {
       const itemIndex = times.findIndex((item) => {
-        return item.week === week && item.day === day && item.hour === hour && item.minute === minute
+        return item.week === week && item.day === day && item.hour === hour && item.minute === minute;
       });
       if (itemIndex === -1) {
-        alert('Item could not be found')
+        alert('Item could not be found');
         return;
       }
-      const item = times[itemIndex]
+      const item = times[itemIndex];
       item.enabled = !item.enabled;
       times[itemIndex] = item;
       chrome.storage.sync.set(

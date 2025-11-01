@@ -1,10 +1,11 @@
-// javascript
+console.log('background.js loaded');
+
 let timeoutId = null;
-const DEFAULT_INTERVAL = 1; // minutes for testing
+const CHECK_INTERVAL = 1;
 
 async function getStoredConfig() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get({ active: true, interval: DEFAULT_INTERVAL }, resolve);
+    chrome.storage.sync.get({ active: true, times: [], currentWeek: 1, lastOperation: new Date() }, resolve);
   });
 }
 
@@ -51,14 +52,11 @@ async function scheduleNextMinuteInterval() {
     timeoutId = null;
   }
 
-  const { interval } = await getStoredConfig();
-  const activationInterval = Math.max(1, Number(interval) || DEFAULT_INTERVAL);
-
   const now = new Date();
   const minutes = now.getMinutes();
 
   // ALWAYS schedule the NEXT interval
-  let targetMinutes = Math.floor(minutes / activationInterval) * activationInterval + activationInterval;
+  let targetMinutes = Math.floor(minutes / CHECK_INTERVAL) * CHECK_INTERVAL + CHECK_INTERVAL;
 
   const target = new Date(now);
   target.setMinutes(targetMinutes);
@@ -69,7 +67,7 @@ async function scheduleNextMinuteInterval() {
 
   // If target rolled over an hour/day, ensure positive
   if (msUntilTarget <= 0) {
-    target.setMinutes(target.getMinutes() + activationInterval);
+    target.setMinutes(target.getMinutes() + CHECK_INTERVAL);
     msUntilTarget = target.getTime() - now.getTime();
   }
 
@@ -82,22 +80,32 @@ async function scheduleNextMinuteInterval() {
 }
 
 async function gatherConfigAndRunActivity() {
-  const { active, interval } = await getStoredConfig();
-  runActivity(active, interval);
+  const { active, times, currentWeek, lastOperation } = await getStoredConfig();
+  runActivity(active, times, currentWeek, lastOperation);
 }
 
-function runActivity(active, interval) {
+function runActivity(active, times, currentWeek, lastOperation) {
   if (!active) {
     console.log('Not active');
     return;
   }
   const now = new Date();
+  const day = now.getDay();
+  const hours = now.getHours();
   const minutes = now.getMinutes();
 
-  if (minutes % interval !== 0) {
-    console.log('Not on interval');
-    return;
+  let lastOpDate = lastOperation instanceof Date ? lastOperation : new Date(lastOperation);
+
+  // Validate parsed date
+  if (isNaN(lastOpDate.getTime())) {
+    console.warn('Invalid lastOperation value from storage, defaulting to now:', lastOperation);
+    lastOpDate = new Date();
   }
+
+  const timeSpan = Math.abs(now - lastOpDate);
+  console.log(timeSpan);
+
+
   playSound();
 }
 
