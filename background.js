@@ -118,7 +118,7 @@ function runActivity(active, times, currentWeek, lastOperation) {
   const timeSpan = Math.abs(now - lastOpDate);
   console.log(timeSpan);
 
-  const WEEK_DURATION = null;
+  const WEEK_DURATION = 7 * 24 * 60 * 60 * 1000;
   const isDifferentWeek =
     timeSpan > WEEK_DURATION || lastOpDate.getDay() > now.getDay();
   if (isDifferentWeek) {
@@ -132,6 +132,10 @@ function runActivity(active, times, currentWeek, lastOperation) {
     });
   }
 
+  chrome.storage.sync.set({ lastOperation: new Date().toISOString() }, () => {
+    console.log('Last operation updated');
+  });
+
   const matchesTime = (time) => {
     return (
       time.week === currentWeek &&
@@ -141,7 +145,10 @@ function runActivity(active, times, currentWeek, lastOperation) {
       time.enabled
     );
   };
-  times.some();
+  if (!times.some(matchesTime)) {
+    console.log('Current time does not match', times);
+    return;
+  }
 
   playSound();
 }
