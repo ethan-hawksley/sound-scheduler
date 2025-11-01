@@ -74,14 +74,15 @@ function renderTimes(times) {
 }
 
 function createTimeRow(time) {
-  const timeRow = document.createElement('div');
-  const timeButton = document.createElement('button');
-  timeButton.classList.add('time-button');
   const day = days[time.day];
   const hour = time.hour.toString().padStart(2, '0');
   const minute = time.minute.toString().padStart(2, '0');
-  timeButton.textContent = `${day}, ${hour}:${minute}`;
 
+  const timeRow = document.createElement('div');
+
+  const timeButton = document.createElement('button');
+  timeButton.classList.add('time-button');
+  timeButton.textContent = `${day}, ${hour}:${minute}`;
   timeButton.addEventListener('click', () => {
     removeTime(time);
   });
@@ -89,7 +90,6 @@ function createTimeRow(time) {
   const timeCheckbox = document.createElement('input');
   timeCheckbox.type = 'checkbox';
   timeCheckbox.checked = time.enabled;
-
   timeCheckbox.addEventListener('change', () => {
     toggleTime(time);
   })
