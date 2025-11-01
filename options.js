@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function restoreOptions() {
   chrome.storage.sync.get(
-    {active: true, times: [], currentWeek: 1},
-    ({active, times, currentWeek}) => {
+    { active: true, times: [], currentWeek: 1 },
+    ({ active, times, currentWeek }) => {
       $('active').checked = active;
       renderTimes(times);
       $('week').value = currentWeek.toString();
@@ -24,23 +24,17 @@ function restoreOptions() {
 
 function attachEventListeners() {
   $('active').addEventListener('change', () => {
-    chrome.storage.sync.set(
-      {active: $('active').checked},
-      () => {
-        console.log('Active changed');
-      }
-    );
+    chrome.storage.sync.set({ active: $('active').checked }, () => {
+      console.log('Active changed');
+    });
   });
   $('add-time').addEventListener('click', () => {
     addTime();
   });
   $('week').addEventListener('change', () => {
-    chrome.storage.sync.set(
-      {currentWeek: Number($('week').value)},
-      () => {
-        console.log('Current Week changed');
-      }
-    );
+    chrome.storage.sync.set({ currentWeek: Number($('week').value) }, () => {
+      console.log('Current Week changed');
+    });
   });
 }
 
@@ -51,7 +45,7 @@ const days = [
   'Wednesday',
   'Thursday',
   'Friday',
-  'Saturday'
+  'Saturday',
 ];
 
 function renderTimes(times) {
@@ -100,10 +94,18 @@ function createTimeRow(time) {
 
 function addTime() {
   const week = Number(prompt('Enter week: 1 or 2'));
-  const day = Number(prompt('Enter day of week: 1-Monday 2-Tuesday 3-Wednesday 4-Thursday 5-Friday'));
+  const day = Number(
+    prompt(
+      'Enter day of week: 1-Monday 2-Tuesday 3-Wednesday 4-Thursday 5-Friday'
+    )
+  );
   const hour = Number(prompt('Enter hour: 0-23'));
   const minute = Number(prompt('Enter minute: 0-59'));
-  const isInvalidInput = Number.isNaN(week) || Number.isNaN(day) || Number.isNaN(hour) || Number.isNaN(minute);
+  const isInvalidInput =
+    Number.isNaN(week) ||
+    Number.isNaN(day) ||
+    Number.isNaN(hour) ||
+    Number.isNaN(minute);
   if (isInvalidInput) {
     alert('Invalid input');
     return;
@@ -115,67 +117,59 @@ function addTime() {
     minute,
     enabled: true,
   };
-  chrome.storage.sync.get(
-    {times: []},
-    ({times}) => {
-      times.push(time);
-      chrome.storage.sync.set(
-        {times},
-        () => {
-          renderTimes(times);
-          console.log('Times changed');
-        }
-      );
-    }
-  );
+  chrome.storage.sync.get({ times: [] }, ({ times }) => {
+    times.push(time);
+    chrome.storage.sync.set({ times }, () => {
+      renderTimes(times);
+      console.log('Times changed');
+    });
+  });
 }
 
-function removeTime({week, day, hour, minute}) {
+function removeTime({ week, day, hour, minute }) {
   console.log(week, day, hour, minute);
-  chrome.storage.sync.get(
-    {times: []},
-    ({times}) => {
-      const itemIndex = times.findIndex((item) => {
-        return item.week === week && item.day === day && item.hour === hour && item.minute === minute;
-      });
-      if (itemIndex === -1) {
-        alert('Item could not be found');
-        return;
-      }
-      times.splice(itemIndex, 1);
-      chrome.storage.sync.set(
-        {times},
-        () => {
-          console.log(times);
-          renderTimes(times);
-          console.log('Times changed');
-        }
+  chrome.storage.sync.get({ times: [] }, ({ times }) => {
+    const itemIndex = times.findIndex((item) => {
+      return (
+        item.week === week &&
+        item.day === day &&
+        item.hour === hour &&
+        item.minute === minute
       );
+    });
+    if (itemIndex === -1) {
+      alert('Item could not be found');
+      return;
     }
-  );
+    times.splice(itemIndex, 1);
+    chrome.storage.sync.set({ times }, () => {
+      console.log(times);
+      renderTimes(times);
+      console.log('Times changed');
+    });
+  });
 }
 
-function toggleTime({week, day, hour, minute}) {
-  chrome.storage.sync.get(
-    {times: []},
-    ({times}) => {
-      const itemIndex = times.findIndex((item) => {
-        return item.week === week && item.day === day && item.hour === hour && item.minute === minute;
-      });
-      if (itemIndex === -1) {
-        alert('Item could not be found');
-        return;
-      }
-      const item = times[itemIndex];
-      item.enabled = !item.enabled;
-      times[itemIndex] = item;
-      chrome.storage.sync.set(
-        {times},
-        () => {
-          renderTimes(times);
-          console.log('Times changed');
-        }
+function toggleTime({ week, day, hour, minute }) {
+  chrome.storage.sync.get({ times: [] }, ({ times }) => {
+    const itemIndex = times.findIndex((item) => {
+      return (
+        item.week === week &&
+        item.day === day &&
+        item.hour === hour &&
+        item.minute === minute
       );
+    });
+    if (itemIndex === -1) {
+      alert('Item could not be found');
+      return;
     }
-  );
+    const item = times[itemIndex];
+    item.enabled = !item.enabled;
+    times[itemIndex] = item;
+    chrome.storage.sync.set({ times }, () => {
+      renderTimes(times);
+      console.log('Times changed');
+    });
+  });
 }

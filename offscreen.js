@@ -13,23 +13,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Handle ping messages to keep connection alive
   if (message.type === 'ping') {
-    sendResponse({status: 'alive'});
+    sendResponse({ status: 'alive' });
     return true;
   }
 });
 
 function playAudio(sendResponse) {
   const audio = new Audio('sound.ogg');
-  audio.play()
+  audio
+    .play()
     .then(() => {
       console.log('Sound played successfully');
-      sendResponse({success: true});
+      sendResponse({ success: true });
     })
     .catch((error) => {
       console.error('Error playing sound:', error);
-      sendResponse({success: false, error: error.message});
+      sendResponse({ success: false, error: error.message });
     });
 }
 
 console.log('Offscreen document loaded and ready');
-

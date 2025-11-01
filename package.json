@@ -1,0 +1,21 @@
+{
+  "name": "sound-scheduler",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ethan-hawksley/sound-scheduler.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/ethan-hawksley/sound-scheduler/issues"
+  },
+  "homepage": "https://github.com/ethan-hawksley/sound-scheduler#readme",
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}
