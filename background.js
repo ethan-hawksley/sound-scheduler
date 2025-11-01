@@ -88,8 +88,8 @@ function runActivity(active, interval) {
     return;
   }
   const now = new Date();
-  const days = now.getDay();
-  const hours = now.getHours();
+  // const days = now.getDay();
+  // const hours = now.getHours();
   const minutes = now.getMinutes();
 
   if (minutes % interval !== 0) {
