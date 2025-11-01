@@ -5,7 +5,7 @@ const CHECK_INTERVAL = 1;
 
 async function getStoredConfig() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get({ active: true, times: [], currentWeek: 1, lastOperation: new Date() }, resolve);
+    chrome.storage.sync.get({active: true, times: [], currentWeek: 1, lastOperation: null}, resolve);
   });
 }
 
@@ -80,7 +80,7 @@ async function scheduleNextMinuteInterval() {
 }
 
 async function gatherConfigAndRunActivity() {
-  const { active, times, currentWeek, lastOperation } = await getStoredConfig();
+  const {active, times, currentWeek, lastOperation} = await getStoredConfig();
   runActivity(active, times, currentWeek, lastOperation);
 }
 
@@ -91,19 +91,51 @@ function runActivity(active, times, currentWeek, lastOperation) {
   }
   const now = new Date();
   const day = now.getDay();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
 
-  let lastOpDate = lastOperation instanceof Date ? lastOperation : new Date(lastOperation);
-
-  // Validate parsed date
-  if (isNaN(lastOpDate.getTime())) {
-    console.warn('Invalid lastOperation value from storage, defaulting to now:', lastOperation);
-    lastOpDate = new Date();
+  let lastOpDate;
+  if (!lastOperation) {
+    lastOpDate = new Date(0);
+    console.log('No lastOperation found, using epoch');
+  } else if (typeof lastOperation === 'string') {
+    lastOpDate = new Date(lastOperation);
+    if (isNaN(lastOpDate.getTime())) {
+      console.warn('Invalid lastOperation string from storage:', lastOperation);
+      lastOpDate = new Date(0);
+    }
+  } else {
+    console.warn('Invalid lastOperation type from storage:', lastOperation);
+    lastOpDate = new Date(0);
   }
 
   const timeSpan = Math.abs(now - lastOpDate);
   console.log(timeSpan);
+
+  const WEEK_DURATION = null;
+  const isDifferentWeek = timeSpan > WEEK_DURATION || lastOpDate.getDay() > now.getDay();
+  if (isDifferentWeek) {
+    if (currentWeek === 1) {
+      currentWeek = 2;
+    } else {
+      currentWeek = 1;
+    }
+    chrome.storage.sync.set(
+      {currentWeek: currentWeek},
+      () => {
+        console.log('Current Week changed');
+      }
+    );
+  }
+
+  const matchesTime = (time) => {
+    return time.week === currentWeek &&
+      time.day === day &&
+      time.hour === hour &&
+      time.minute === minute &&
+      time.enabled;
+  };
+  times.some();
 
 
   playSound();
@@ -147,13 +179,13 @@ async function playSound() {
 })();
 
 // Keep alive mechanism
-chrome.alarms.create('keepAlive', { periodInMinutes: 0.5 });
+chrome.alarms.create('keepAlive', {periodInMinutes: 0.5});
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'keepAlive') {
     console.log('Keep alive ping');
 
     try {
-      await trySendMessageWithOffscreen({ type: 'ping' });
+      await trySendMessageWithOffscreen({type: 'ping'});
     } catch (error) {
       console.log('Offscreen document not available for ping, attempted recreate');
     }
