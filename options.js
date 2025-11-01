@@ -57,6 +57,8 @@ const days = [
 function renderTimes(times) {
   const week1Times = $('week-1-times');
   const week2Times = $('week-2-times');
+  week1Times.replaceChildren();
+  week2Times.replaceChildren();
   for (const time of times) {
     const timeDiv = document.createElement('div');
     const timeButton = document.createElement('button');
@@ -81,9 +83,9 @@ function renderTimes(times) {
     timeDiv.append(timeButton, timeCheckbox)
 
     if (time.week === 1) {
-      week1Times.append(timeButton);
+      week1Times.append(timeDiv);
     } else {
-      week2Times.append(timeButton);
+      week2Times.append(timeDiv);
     }
   }
 }
@@ -136,6 +138,7 @@ function removeTime({week, day, hour, minute}) {
       chrome.storage.sync.set(
         {times},
         () => {
+          console.log(times);
           renderTimes(times);
           console.log('Times changed');
         }

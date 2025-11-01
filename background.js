@@ -1,79 +1,89 @@
+// javascript
 let timeoutId = null;
-let offscreenDocumentCreated = false;
-const activationInterval = 1; // 1 minute for testing, change to 5 for production
+const DEFAULT_INTERVAL = 1; // minutes for testing
+
+async function getStoredConfig() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get({ active: true, interval: DEFAULT_INTERVAL }, resolve);
+  });
+}
 
 async function createOffscreenDocument() {
-  // Check if an offscreen document already exists
-  const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT'],
-    documentUrls: [chrome.runtime.getURL('offscreen.html')]
-  });
-
-  if (existingContexts.length > 0) {
-    offscreenDocumentCreated = true;
-    console.log('Offscreen document already exists');
-    return;
-  }
-
   try {
-    // Try to create the offscreen document
+    const existingContexts = await chrome.runtime.getContexts({
+      contextTypes: ['OFFSCREEN_DOCUMENT'],
+      documentUrls: [chrome.runtime.getURL('offscreen.html')]
+    });
+
+    if (existingContexts.length > 0) {
+      console.log('Offscreen document already exists');
+      return true;
+    }
+
     await chrome.offscreen.createDocument({
       url: 'offscreen.html',
       reasons: ['AUDIO_PLAYBACK'],
       justification: 'Play chime sound at regular intervals'
     });
-    offscreenDocumentCreated = true;
+
     console.log('Offscreen document created');
+    return true;
   } catch (error) {
     console.warn('Error creating offscreen document:', error);
+    return false;
   }
 }
 
-function scheduleNextMinuteInterval() {
+async function ensureOffscreenDocument() {
+  // try to ensure it exists; return true if exists/created
+  const ok = await createOffscreenDocument();
+  if (ok) return true;
+
+  // small backoff and retry once
+  await new Promise((r) => setTimeout(r, 500));
+  return await createOffscreenDocument();
+}
+
+async function scheduleNextMinuteInterval() {
   // Clear any existing timeout
   if (timeoutId) {
     clearTimeout(timeoutId);
     timeoutId = null;
   }
 
+  const { interval } = await getStoredConfig();
+  const activationInterval = Math.max(1, Number(interval) || DEFAULT_INTERVAL);
+
   const now = new Date();
   const minutes = now.getMinutes();
 
-  // Calculate next interval - ALWAYS get the NEXT interval, never the current one
+  // ALWAYS schedule the NEXT interval
   let targetMinutes = Math.floor(minutes / activationInterval) * activationInterval + activationInterval;
 
-  // Create target time
   const target = new Date(now);
   target.setMinutes(targetMinutes);
   target.setSeconds(0);
   target.setMilliseconds(0);
 
-  const msUntilTarget = target.getTime() - now.getTime();
+  let msUntilTarget = target.getTime() - now.getTime();
 
-  // Safety check - ensure we're scheduling for the future
+  // If target rolled over an hour/day, ensure positive
   if (msUntilTarget <= 0) {
-    console.error(`Invalid scheduling: ${msUntilTarget}ms until target`);
-    // Schedule for next interval
-    setTimeout(() => scheduleNextMinuteInterval(), 1000);
-    return;
+    target.setMinutes(target.getMinutes() + activationInterval);
+    msUntilTarget = target.getTime() - now.getTime();
   }
 
   console.log(`Next chime in ${Math.round(msUntilTarget / 1000)} seconds at ${target.toLocaleTimeString()}`);
 
-  timeoutId = setTimeout(() => {
-    gatherConfigAndRunActivity();
-    scheduleNextMinuteInterval(); // Schedule the next one
+  timeoutId = setTimeout(async () => {
+    await gatherConfigAndRunActivity();
+    scheduleNextMinuteInterval(); // schedule next using possibly-updated interval
   }, msUntilTarget);
 }
 
-function gatherConfigAndRunActivity() {
-  chrome.storage.sync.get(
-    {active: true, interval: 1},
-    ({active, interval}) => {
-      runActivity(active, interval);
-    }
-  );
-
+async function gatherConfigAndRunActivity() {
+  const { active, interval } = await getStoredConfig();
+  runActivity(active, interval);
 }
 
 function runActivity(active, interval) {
@@ -82,8 +92,6 @@ function runActivity(active, interval) {
     return;
   }
   const now = new Date();
-  // const days = now.getDay();
-  // const hours = now.getHours();
   const minutes = now.getMinutes();
 
   if (minutes % interval !== 0) {
@@ -93,15 +101,27 @@ function runActivity(active, interval) {
   playSound();
 }
 
-async function playSound() {
-  const now = new Date();
+async function trySendMessageWithOffscreen(message) {
+  // Ensure offscreen exists then send; retry once on failure
+  const ensured = await ensureOffscreenDocument();
+  if (!ensured) {
+    throw new Error('Unable to ensure offscreen document');
+  }
 
   try {
-    // Ensure offscreen document exists
-    await createOffscreenDocument();
+    return await chrome.runtime.sendMessage(message);
+  } catch (err) {
+    console.warn('SendMessage failed, retrying after recreating offscreen:', err);
+    const recreated = await createOffscreenDocument();
+    if (!recreated) throw err;
+    return await chrome.runtime.sendMessage(message);
+  }
+}
 
-    // Send message to offscreen document to play sound
-    await chrome.runtime.sendMessage({
+async function playSound() {
+  const now = new Date();
+  try {
+    await trySendMessageWithOffscreen({
       type: 'play-sound',
       timestamp: `${now.toLocaleTimeString()}.${now.getMilliseconds()}`
     });
@@ -109,31 +129,25 @@ async function playSound() {
     console.log(`🔔 CHIME at exactly ${now.toLocaleTimeString()}.${String(now.getMilliseconds()).padStart(3, '0')}`);
   } catch (error) {
     console.error('Error playing sound:', error);
-    // Reset flag and try to recreate offscreen document
-    offscreenDocumentCreated = false;
-    await createOffscreenDocument();
   }
 }
 
 // Initialize
 (async () => {
-  await createOffscreenDocument();
+  await ensureOffscreenDocument();
   scheduleNextMinuteInterval();
 })();
 
-// Keep alive mechanism (Chrome might suspend the service worker)
-chrome.alarms.create('keepAlive', {periodInMinutes: 0.5});
+// Keep alive mechanism
+chrome.alarms.create('keepAlive', { periodInMinutes: 0.5 });
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'keepAlive') {
-    // This keeps the service worker alive
     console.log('Keep alive ping');
 
-    // Also ping the offscreen document to keep it alive
     try {
-      await chrome.runtime.sendMessage({type: 'ping'});
+      await trySendMessageWithOffscreen({ type: 'ping' });
     } catch (error) {
-      // Offscreen document might not exist yet, that's okay
-      console.log('Offscreen document not available for ping');
+      console.log('Offscreen document not available for ping, attempted recreate');
     }
   }
 });
@@ -141,7 +155,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 // Handle extension updates or reloads
 chrome.runtime.onInstalled.addListener(async () => {
   console.log('Extension installed/updated');
-  offscreenDocumentCreated = false;
-  await createOffscreenDocument();
+  await ensureOffscreenDocument();
   scheduleNextMinuteInterval();
 });
