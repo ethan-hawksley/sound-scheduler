@@ -57,37 +57,45 @@ const days = [
 function renderTimes(times) {
   const week1Times = $('week-1-times');
   const week2Times = $('week-2-times');
-  week1Times.replaceChildren();
-  week2Times.replaceChildren();
+
+  const frag1 = document.createDocumentFragment();
+  const frag2 = document.createDocumentFragment();
+
   for (const time of times) {
-    const timeDiv = document.createElement('div');
-    const timeButton = document.createElement('button');
-    timeButton.classList.add('time-button');
-    const day = days[time.day];
-    const hour = time.hour.toString().padStart(2, '0');
-    const minute = time.minute.toString().padStart(2, '0');
-    timeButton.textContent = `${day}, ${hour}:${minute}`;
-
-    timeButton.addEventListener('click', () => {
-      removeTime(time);
-    });
-
-    const timeCheckbox = document.createElement('input');
-    timeCheckbox.type = 'checkbox';
-    timeCheckbox.checked = time.enabled;
-
-    timeCheckbox.addEventListener('change', () => {
-      toggleTime(time);
-    })
-
-    timeDiv.append(timeButton, timeCheckbox)
-
+    const row = createTimeRow(time);
     if (time.week === 1) {
-      week1Times.append(timeDiv);
+      frag1.append(row)
     } else {
-      week2Times.append(timeDiv);
+      frag2.append(row)
     }
   }
+  week1Times.replaceChildren(frag1);
+  week2Times.replaceChildren(frag2);
+}
+
+function createTimeRow(time) {
+  const timeRow = document.createElement('div');
+  const timeButton = document.createElement('button');
+  timeButton.classList.add('time-button');
+  const day = days[time.day];
+  const hour = time.hour.toString().padStart(2, '0');
+  const minute = time.minute.toString().padStart(2, '0');
+  timeButton.textContent = `${day}, ${hour}:${minute}`;
+
+  timeButton.addEventListener('click', () => {
+    removeTime(time);
+  });
+
+  const timeCheckbox = document.createElement('input');
+  timeCheckbox.type = 'checkbox';
+  timeCheckbox.checked = time.enabled;
+
+  timeCheckbox.addEventListener('change', () => {
+    toggleTime(time);
+  })
+
+  timeRow.append(timeButton, timeCheckbox)
+  return timeRow;
 }
 
 function addTime() {
