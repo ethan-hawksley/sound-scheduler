@@ -72,12 +72,13 @@ function renderTimes(times) {
 
     const timeCheckbox = document.createElement('input');
     timeCheckbox.type = 'checkbox';
+    timeCheckbox.checked = time.enabled;
 
     timeCheckbox.addEventListener('change', () => {
-      changeTime(time);
+      toggleTime(time);
     })
 
-    timeDiv.append(timeButton)
+    timeDiv.append(timeButton, timeCheckbox)
 
     if (time.week === 1) {
       week1Times.append(timeButton);
@@ -143,7 +144,7 @@ function removeTime({week, day, hour, minute}) {
   );
 }
 
-function changeTime({week, day, hour, minute}) {
+function toggleTime({week, day, hour, minute}) {
   chrome.storage.sync.get(
     {times: []},
     ({times}) => {

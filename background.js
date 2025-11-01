@@ -38,8 +38,6 @@ function scheduleNextMinuteInterval() {
 
   const now = new Date();
   const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
-  const milliseconds = now.getMilliseconds();
 
   // Calculate next interval - ALWAYS get the NEXT interval, never the current one
   let targetMinutes = Math.floor(minutes / activationInterval) * activationInterval + activationInterval;
