@@ -48,12 +48,6 @@ function scheduleNextMinuteInterval() {
   target.setSeconds(0);
   target.setMilliseconds(0);
 
-  // Handle hour rollover
-  if (targetMinutes >= 60) {
-    target.setHours(target.getHours() + 1);
-    target.setMinutes(targetMinutes % 60);
-  }
-
   const msUntilTarget = target.getTime() - now.getTime();
 
   // Safety check - ensure we're scheduling for the future
