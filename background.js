@@ -89,7 +89,11 @@ function runActivity(active, interval) {
     console.log('Not active');
     return;
   }
-  const minutes = (new Date).getMinutes();
+  const now = new Date();
+  const days = now.getDay();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+
   if (minutes % interval !== 0) {
     console.log('Not on interval');
     return;
