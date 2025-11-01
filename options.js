@@ -13,11 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function restoreOptions() {
   chrome.storage.sync.get(
-    {active: true, interval: 1, times: []},
-    (items) => {
-      $('active').checked = items.active;
-      $('interval').value = items.interval;
-      renderTimes(items.times);
+    {active: true, times: [], currentWeek: 1},
+    ({active, times, currentWeek}) => {
+      $('active').checked = active;
+      renderTimes(times);
+      $('week').value = currentWeek.toString();
     }
   );
 }
@@ -31,17 +31,17 @@ function attachEventListeners() {
       }
     );
   });
-  $('interval').addEventListener('change', () => {
-    chrome.storage.sync.set(
-      {interval: $('interval').value},
-      () => {
-        console.log('Interval changed');
-      }
-    );
-  });
   $('add-time').addEventListener('click', () => {
     addTime();
   });
+  $('week').addEventListener('change', () => {
+    chrome.storage.sync.set(
+      {currentWeek: Number($('week').value)}
+      , () => {
+        console.log('Current Week changed');
+      }
+    )
+  })
 }
 
 const days = [
