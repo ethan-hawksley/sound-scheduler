@@ -10,7 +10,7 @@ document.getElementById('open-options').addEventListener('click', () => {
 
 document.getElementById('stop-sound').addEventListener('click', async () => {
   try {
-    const now = new Date()
+    const now = new Date();
     await chrome.runtime.sendMessage({
       type: 'stop-sound',
       timestamp: `${now.toLocaleTimeString()}.${now.getMilliseconds()}`,

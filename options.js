@@ -65,6 +65,17 @@ function renderTimes(times) {
   }
   week1Times.replaceChildren(frag1);
   week2Times.replaceChildren(frag2);
+
+  const weekIds = new Set();
+  for (const time of times) {
+    weekIds.add(time.week);
+  }
+  const weeksDiv = document.getElementById('weeks');
+  weeksDiv.replaceChildren();
+  for (const weekId of weekIds) {
+    const table = createWeekTable(weekId, times);
+    weeksDiv.append(table);
+  }
 }
 
 function createTimeRow(time) {
@@ -174,3 +185,125 @@ function toggleTime({ week, day, hour, minute }) {
     });
   });
 }
+
+function createWeekTable(weekId, times) {
+  const uniqueHourMinutePairs = Array.from(
+    new Set(
+      times.map((time) =>
+        JSON.stringify({ hour: time.hour, minute: time.minute })
+      )
+    )
+  ).map((stringifiedPair) => JSON.parse(stringifiedPair));
+
+  uniqueHourMinutePairs.sort((a, b) => {
+    return a.hour - b.hour || a.minute - b.minute;
+  });
+
+  const table = document.createElement('table');
+
+  const caption = document.createElement('caption');
+  caption.textContent = `Week ${weekId}`;
+  table.append(caption);
+
+  const thead = document.createElement('thead');
+  const tableHeadRow = document.createElement('tr');
+  const timeStampHead = document.createElement('th');
+  timeStampHead.scope = 'col';
+  timeStampHead.textContent = 'Time';
+  tableHeadRow.append(timeStampHead);
+  for (const day of days) {
+    const th = document.createElement('th');
+    th.scope = 'col';
+    th.textContent = day;
+    tableHeadRow.append(th);
+  }
+  thead.append(tableHeadRow);
+  table.append(thead);
+
+  const tbody = document.createElement('tbody');
+  for (const hourMinutePair of uniqueHourMinutePairs) {
+    const tr = document.createElement('tr');
+
+    const th = document.createElement('th');
+    th.scope = 'row';
+    th.textContent = `${hourMinutePair.hour}:${hourMinutePair.minute.toString().padStart(2, '0')}`;
+    tr.append(th);
+
+    for (let dayNumber = 0; dayNumber < days.length; dayNumber++) {
+      const td = document.createElement('td');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+
+      const existingTime = times.find(
+        (time) =>
+          time.week === weekId &&
+          time.day === dayNumber &&
+          time.hour === hourMinutePair.hour &&
+          time.minute === hourMinutePair.minute
+      );
+
+      checkbox.checked = existingTime ? existingTime.enabled : false;
+
+      checkbox.addEventListener('change', () => {
+        setTime(
+          weekId,
+          dayNumber,
+          hourMinutePair.hour,
+          hourMinutePair.minute,
+          checkbox.checked
+        );
+      });
+      td.append(checkbox);
+      tr.append(td);
+    }
+    tbody.append(tr);
+  }
+  table.append(tbody);
+
+  return table;
+}
+
+function setTime(week, day, hour, minute, enabled) {
+  const time = {
+    week,
+    day,
+    hour,
+    minute,
+  };
+
+  chrome.storage.sync.get({ times: [] }, ({ times }) => {
+    const itemIndex = times.findIndex(
+      (item) =>
+        item.week === week &&
+        item.day === day &&
+        item.hour === hour &&
+        item.minute === minute
+    );
+
+    if (enabled) {
+      if (itemIndex === -1) {
+        times.push({ ...time, enabled: true });
+      } else {
+        times[itemIndex].enabled = true;
+      }
+    } else {
+      if (itemIndex !== -1) {
+        times.splice(itemIndex, 1);
+      }
+    }
+
+    chrome.storage.sync.set({ times }, () => {
+      renderTimes(times);
+      console.log('Times changed');
+    });
+  });
+}
+
+/*
+  Add week - auto increments
+  Then a table showing all the days of the week is rendered
+  Add time - input minutes and seconds
+  rows of checkboxes, tick the times you want
+
+  styling later
+ */
