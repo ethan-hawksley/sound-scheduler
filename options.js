@@ -68,6 +68,7 @@ function renderTimes(times) {
 }
 
 function createTimeRow(time) {
+  const week = time.week;
   const day = days[time.day];
   const hour = time.hour.toString().padStart(2, '0');
   const minute = time.minute.toString().padStart(2, '0');
@@ -76,7 +77,7 @@ function createTimeRow(time) {
 
   const timeButton = document.createElement('button');
   timeButton.classList.add('time-button');
-  timeButton.textContent = `${day}, ${hour}:${minute}`;
+  timeButton.textContent = `Week ${week} - ${day}, ${hour}:${minute}`;
   timeButton.addEventListener('click', () => {
     removeTime(time);
   });
