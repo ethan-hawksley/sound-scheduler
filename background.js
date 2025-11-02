@@ -93,10 +93,20 @@ async function gatherConfigAndRunActivity() {
 function runActivity(active, times, currentWeek, lastOperation) {
   if (!active) {
     console.log('Not active');
-    chrome.action.setBadgeBackgroundColor({ color: '#ff0000' });
-    chrome.action.setBadgeText({ text: '❌' });
+    // chrome.action.setBadgeBackgroundColor({ color: '#ff0000' });
+    // chrome.action.setBadgeText({ text: '❌' });
     return;
   }
+  chrome.action.getBadgeText({}, (text) => {
+    if (text === '►') return;
+    if (active) {
+      chrome.action.setBadgeBackgroundColor({ color: '#00ff00' });
+      chrome.action.setBadgeText({ text: '✔' });
+    } else {
+      chrome.action.setBadgeBackgroundColor({ color: '#ff0000' });
+      chrome.action.setBadgeText({ text: '❌' });
+    }
+  });
   const now = new Date();
   const day = now.getDay();
   const hour = now.getHours();
@@ -149,13 +159,8 @@ function runActivity(active, times, currentWeek, lastOperation) {
   };
   if (!times.some(matchesTime)) {
     console.log('Current time does not match', times);
-    chrome.action.setBadgeBackgroundColor({ color: '#00FF00' });
-    chrome.action.setBadgeText({ text: '✔' });
     return;
   }
-
-  chrome.action.setBadgeBackgroundColor({ color: '#0051ff' });
-  chrome.action.setBadgeText({ text: '►' });
 
   playSound();
 }
@@ -188,8 +193,11 @@ async function playSound() {
       timestamp: `${now.toLocaleTimeString()}.${now.getMilliseconds()}`,
     });
 
+    chrome.action.setBadgeBackgroundColor({ color: '#0000ff' });
+    chrome.action.setBadgeText({ text: '►' });
+
     console.log(
-      `🔔 CHIME at exactly ${now.toLocaleTimeString()}.${String(now.getMilliseconds()).padStart(3, '0')}`
+      `Sound played at exactly ${now.toLocaleTimeString()}.${String(now.getMilliseconds()).padStart(3, '0')}`
     );
   } catch (error) {
     console.error('Error playing sound:', error);
@@ -199,6 +207,7 @@ async function playSound() {
 // Initialize
 (async () => {
   await ensureOffscreenDocument();
+  gatherConfigAndRunActivity();
   scheduleNextMinuteInterval();
 })();
 
