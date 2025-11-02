@@ -39,11 +39,11 @@ async function createOffscreenDocument() {
 }
 
 async function ensureOffscreenDocument() {
-  // try to ensure it exists; return true if exists/created
+  // Try to ensure it exists; return true if exists/created
   const ok = await createOffscreenDocument();
   if (ok) return true;
 
-  // small backoff and retry once
+  // Small backoff and retry once
   await new Promise((r) => setTimeout(r, 500));
   return await createOffscreenDocument();
 }
@@ -58,7 +58,6 @@ async function scheduleNextMinuteInterval() {
   const now = new Date();
   const minutes = now.getMinutes();
 
-  // ALWAYS schedule the NEXT interval
   let targetMinutes =
     Math.floor(minutes / CHECK_INTERVAL) * CHECK_INTERVAL + CHECK_INTERVAL;
 
@@ -91,12 +90,6 @@ async function gatherConfigAndRunActivity() {
 }
 
 function runActivity(active, times, currentWeek, lastOperation) {
-  if (!active) {
-    console.log('Not active');
-    // chrome.action.setBadgeBackgroundColor({ color: '#ff0000' });
-    // chrome.action.setBadgeText({ text: '❌' });
-    return;
-  }
   chrome.action.getBadgeText({}, (text) => {
     if (text === '►') return;
     if (active) {
@@ -107,6 +100,10 @@ function runActivity(active, times, currentWeek, lastOperation) {
       chrome.action.setBadgeText({ text: '❌' });
     }
   });
+  if (!active) {
+    console.log('Not active');
+    return;
+  }
   const now = new Date();
   const day = now.getDay();
   const hour = now.getHours();
@@ -236,15 +233,14 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // Handle messages from popup and other contexts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'stop-sound') {
+  if (message.type === 'stop-sound' && !message.forwarded) {
     console.log('Received stop-sound request from popup');
-    // Forward to offscreen document to stop the audio
     trySendMessageWithOffscreen({
       type: 'stop-sound',
       timestamp: message.timestamp,
+      forwarded: true,
     })
       .then(() => {
-        // Update badge after stopping sound
         chrome.action.setBadgeBackgroundColor({ color: '#00ff00' });
         chrome.action.setBadgeText({ text: '✔' });
         console.log('Sound stopped and badge updated');
@@ -254,7 +250,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.error('Error stopping sound:', error);
         sendResponse({ success: false, error: error.message });
       });
-    return true; // Keep the message channel open for async response
+    return true;
   }
 });
-

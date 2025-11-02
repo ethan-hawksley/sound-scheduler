@@ -16,6 +16,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'stop-sound') {
     console.log('Stopping sound');
     stopAudio();
+    sendResponse({ success: true });
     return true;
   }
 
