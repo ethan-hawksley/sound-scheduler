@@ -93,9 +93,7 @@ async function gatherConfigAndRunActivity() {
 function runActivity(active, times, currentWeek, lastOperation) {
   if (!active) {
     console.log('Not active');
-    chrome.action.setBadgeBackgroundColor(
-      { color: '#ff0000' }
-    );
+    chrome.action.setBadgeBackgroundColor({ color: '#ff0000' });
     chrome.action.setBadgeText({ text: '❌' });
     return;
   }
@@ -151,16 +149,12 @@ function runActivity(active, times, currentWeek, lastOperation) {
   };
   if (!times.some(matchesTime)) {
     console.log('Current time does not match', times);
-    chrome.action.setBadgeBackgroundColor(
-      { color: '#00FF00' }
-    );
+    chrome.action.setBadgeBackgroundColor({ color: '#00FF00' });
     chrome.action.setBadgeText({ text: '✔' });
     return;
   }
 
-  chrome.action.setBadgeBackgroundColor(
-    { color: '#0051ff' }
-  );
+  chrome.action.setBadgeBackgroundColor({ color: '#0051ff' });
   chrome.action.setBadgeText({ text: '►' });
 
   playSound();
