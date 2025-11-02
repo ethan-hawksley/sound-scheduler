@@ -233,3 +233,28 @@ chrome.runtime.onInstalled.addListener(async () => {
   await ensureOffscreenDocument();
   scheduleNextMinuteInterval();
 });
+
+// Handle messages from popup and other contexts
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'stop-sound') {
+    console.log('Received stop-sound request from popup');
+    // Forward to offscreen document to stop the audio
+    trySendMessageWithOffscreen({
+      type: 'stop-sound',
+      timestamp: message.timestamp,
+    })
+      .then(() => {
+        // Update badge after stopping sound
+        chrome.action.setBadgeBackgroundColor({ color: '#00ff00' });
+        chrome.action.setBadgeText({ text: '✔' });
+        console.log('Sound stopped and badge updated');
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error('Error stopping sound:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep the message channel open for async response
+  }
+});
+
