@@ -25,6 +25,9 @@ function playAudio(sendResponse) {
     .then(() => {
       console.log('Sound played successfully');
       sendResponse({ success: true });
+      audio.addEventListener('ended', () => {
+
+      })
     })
     .catch((error) => {
       console.error('Error playing sound:', error);
