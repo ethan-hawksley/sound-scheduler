@@ -5,16 +5,16 @@
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ethan-hawksley/sound-scheduler.git"
+    "url": "git+https://github.com/ethanhawksley/sound-scheduler.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/ethan-hawksley/sound-scheduler/issues"
+    "url": "https://github.com/ethanhawksley/sound-scheduler/issues"
   },
-  "homepage": "https://github.com/ethan-hawksley/sound-scheduler#readme",
+  "homepage": "https://github.com/ethanhawksley/sound-scheduler#readme",
   "devDependencies": {
     "prettier": "^3.6.2"
   }
